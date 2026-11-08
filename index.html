@@ -175,6 +175,14 @@
     margin-bottom: 16px;
     text-align: center;
   }
+  .first-week {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--accent);
+    border-radius: 12px;
+  }
+  .first-week p { margin: 0; }
+  .first-week .first-week-title { font-weight: 700; color: var(--accent); margin-bottom: 4px; }
   .extras { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
   .extras li {
     background: var(--accent-soft);
@@ -219,6 +227,10 @@
   // 公開後のURLをここに入れると、シェアにこのURLが使われます（空なら表示中のページのURL）
   var SHARE_URL = 'https://kiroku-cat.github.io/kiroku-shindan/';
 
+  // 結果ページのリンク先。空のあいだはボタンを表示しない（https:// で始まるURLだけ有効）
+  var NOTE_URL = '';      // 記録アプリを作っている話（note 1本目）
+  var CHECKLIST_URL = ''; // 記録項目リスト（note 2本目）
+
   var QUESTIONS = [
     {
       key: 'q1',
@@ -259,22 +271,26 @@
     simple: {
       name: 'シンプル記録タイプ',
       lead: 'まずは無料で、記録だけを始めたい人向けです。',
-      body: '日時が自動で残り、時系列で見返せる仕組みがおすすめです。'
+      body: '日時が自動で残り、時系列で見返せる仕組みがおすすめです。',
+      firstWeek: '1日1行でOK。「いつ・何があったか」だけを書きましょう。気持ちは、書ける日だけ添えれば十分です。'
     },
     advice: {
       name: 'アドバイス伴走タイプ',
       lead: '一人で抱えている人向けです。',
-      body: '記録しながら、AIに気持ちの整理を手伝ってもらう使い方がおすすめです。AIは「学習に使われない設定」にしてから使いましょう。'
+      body: '記録しながら、AIに気持ちの整理を手伝ってもらう使い方がおすすめです。AIは「学習に使われない設定」にしてから使いましょう。',
+      firstWeek: '出来事を1行書いて、「今の気持ち」を一言添えるだけでOK。うまく言葉にならない日は、そのままAIに話しかけてみましょう。'
     },
     privacy: {
       name: '鉄壁プライバシータイプ',
       lead: '見られる不安がある人向けです。',
-      body: '記録専用のGoogleアカウントを作り、2段階認証と画面ロックを設定し、通知のプレビュー（ロック画面に内容が出る機能）を切っておくのがおすすめです。'
+      body: '記録専用のGoogleアカウントを作り、2段階認証と画面ロックを設定し、通知のプレビュー（ロック画面に内容が出る機能）を切っておくのがおすすめです。',
+      firstWeek: '書き始める前に、まず守りを固めましょう。記録専用アカウント・2段階認証・画面ロック・通知プレビューのオフ。準備ができたら、1日1行から始めればOKです。'
     },
     condition: {
       name: '段取り整理タイプ',
       lead: '今は記録より、離婚の条件を整理するのが先の人向けです。',
-      body: '条件整理に特化した市販のアプリを使うのもおすすめです。日々の記録も並行して始めておくと、話し合いの材料になります。'
+      body: '条件整理に特化した市販のアプリを使うのもおすすめです。日々の記録も並行して始めておくと、話し合いの材料になります。',
+      firstWeek: '親権・養育費・財産分与など、気になる条件を思いつくまま書き出すだけでOK。決めきれないことは「まだわからない」のまま残しておけば十分です。'
     }
   };
 
@@ -426,6 +442,15 @@
     return 'https://x.com/intent/tweet?' + params;
   }
 
+  function isHttps(url) {
+    return /^https:\/\//.test(url);
+  }
+
+  function linkButton(url, cls, label) {
+    if (!isHttps(url)) return null;
+    return el('a', { class: cls, href: url, target: '_blank', rel: 'noopener noreferrer', text: label });
+  }
+
   function renderResult() {
     var r = judge(answers);
     var t = TYPES[r.type];
@@ -440,7 +465,11 @@
       el('p', { class: 'result-kicker', text: 'あなたにおすすめなのは' }),
       el('h2', { class: 'result-type', tabindex: '-1', text: t.name }),
       el('p', { text: t.lead }),
-      el('p', { text: t.body })
+      el('p', { text: t.body }),
+      el('div', { class: 'first-week' }, [
+        el('p', { class: 'first-week-title', text: '最初の1週間は、これだけでOK' }),
+        el('p', { text: t.firstWeek })
+      ])
     ];
 
     if (r.extras.length) {
@@ -454,10 +483,10 @@
     ]));
 
     nodes.push(el('div', { class: 'actions' }, [
-      el('a', { class: 'btn btn-primary', href: '#', text: '記録アプリを作っている話を読む' }),
-      el('a', { class: 'btn btn-secondary', href: '#', text: '記録項目リストを見る' }),
+      linkButton(NOTE_URL, 'btn btn-primary', '記録アプリを作っている話を読む'),
+      linkButton(CHECKLIST_URL, 'btn btn-secondary', '記録項目リストを見る'),
       el('a', {
-        class: 'btn btn-secondary', href: shareHref(t.name),
+        class: 'btn ' + (isHttps(NOTE_URL) ? 'btn-secondary' : 'btn-primary'), href: shareHref(t.name),
         target: '_blank', rel: 'noopener noreferrer', text: 'Xで結果をシェア'
       }),
       r.type === 'privacy'

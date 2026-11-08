@@ -1,0 +1,4 @@
+# index.html 以外は公開しない（CLAUDE.md・docs・posts などを誤って上げないため）
+/*
+!/index.html
+!/.gitignore
